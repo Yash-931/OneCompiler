@@ -1,10 +1,12 @@
 import { Job, Worker } from "bullmq";
 import { spawn } from "child_process";
 import fs from "fs";
+import { prisma } from "@repo/db";
 
 const worker = new Worker(
   "code-submissions",
   async (job: Job) => {
+    const id = job.data.id;
     const language = job.data.language;
     const code = job.data.code;
 
@@ -14,8 +16,14 @@ const worker = new Worker(
       const filePath = __dirname + "/codes/a.js";
       fs.writeFileSync(filePath, code);
       const response = spawn("node", [filePath]);
-      response.stdout.on("data", (data) => {
+      response.stdout.on("data", async (data) => {
         console.log(data.toString());
+        await prisma.submissions.update({
+          where: { id: id },
+          data: {
+            output: data.toString(),
+          },
+        });
       });
     }
 
@@ -24,9 +32,15 @@ const worker = new Worker(
       fs.writeFileSync(filePath, code);
       const response = spawn("python3", [filePath]);
 
-      response.stdout.on('data', (data) => {
-        console.log(data.toString())
-      })
+      response.stdout.on("data", async (data) => {
+        console.log(data.toString());
+        await prisma.submissions.update({
+          where: { id: id },
+          data: {
+            output: data.toString(),
+          },
+        });
+      });
     }
   },
   {

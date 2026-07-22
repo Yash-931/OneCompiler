@@ -43,6 +43,7 @@
     "apps/worker": {
       "name": "worker",
       "dependencies": {
+        "@repo/db": "workspace:*",
         "bullmq": "^5.80.10",
       },
       "devDependencies": {
