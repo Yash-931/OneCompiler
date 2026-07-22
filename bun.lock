@@ -25,6 +25,7 @@
       "dependencies": {
         "@bull-board/api": "^8.1.2",
         "@bull-board/express": "^8.1.2",
+        "@repo/db": "workspace:*",
         "@types/cors": "^2.8.19",
         "@types/express": "^5.0.6",
         "bullmq": "^5.80.10",
@@ -34,6 +35,34 @@
       },
       "devDependencies": {
         "@types/bun": "latest",
+      },
+      "peerDependencies": {
+        "typescript": "^5",
+      },
+    },
+    "apps/worker": {
+      "name": "worker",
+      "dependencies": {
+        "bullmq": "^5.80.10",
+      },
+      "devDependencies": {
+        "@types/bun": "latest",
+      },
+      "peerDependencies": {
+        "typescript": "^5",
+      },
+    },
+    "packages/db": {
+      "name": "@repo/db",
+      "dependencies": {
+        "@prisma/adapter-pg": "^7.9.0",
+        "@prisma/client": "^7.9.0",
+        "pg": "^8.22.0",
+        "prisma": "^7.9.0",
+      },
+      "devDependencies": {
+        "@types/bun": "latest",
+        "@types/pg": "^8.20.0",
       },
       "peerDependencies": {
         "typescript": "^5",
@@ -194,6 +223,8 @@
     "@redis/search": ["@redis/search@6.1.0", "", { "peerDependencies": { "@redis/client": "^6.1.0" } }, "sha512-kS5agg+3yZbrdrt8omrew7FLCD8eOm7tarG1CROekPBRe+QGDR9aOpnHIQaYsYi6wPRTH70nQiF06AIjgURefQ=="],
 
     "@redis/time-series": ["@redis/time-series@6.1.0", "", { "peerDependencies": { "@redis/client": "^6.1.0" } }, "sha512-uIDBtV8MmG/xpJsRqbGSO4iX6ryj37MLMP82lRpFvI7ykAVe5GyqgxigEbU+uZNv9kDPNMKw3dvI/S/J1BNBzA=="],
+
+    "@repo/db": ["@repo/db@workspace:packages/db"],
 
     "@repo/eslint-config": ["@repo/eslint-config@workspace:packages/eslint-config"],
 
@@ -1034,6 +1065,8 @@
     "which-typed-array": ["which-typed-array@1.1.22", "", { "dependencies": { "available-typed-arrays": "^1.0.7", "call-bind": "^1.0.9", "call-bound": "^1.0.4", "for-each": "^0.3.5", "get-proto": "^1.0.1", "gopd": "^1.2.0", "has-tostringtag": "^1.0.2" } }, "sha512-fvO4ExWMFsqyhG3AiPAObMuY1lxaqgYcxbc49CNdWDDECOJNgQyvsOWVwbZc+qf3rzRtxojBK+CMEv0Ld5CYpw=="],
 
     "word-wrap": ["word-wrap@1.2.5", "", {}, "sha512-BN22B5eaMMI9UMtjrGd5g5eCYPpCPDUy0FJXbYsaT5zYxjFOckS53SQDE3pWkVoWpHXVb3BrYcEN4Twa55B5cA=="],
+
+    "worker": ["worker@workspace:apps/worker"],
 
     "wrappy": ["wrappy@1.0.2", "", {}, "sha512-l4Sp/DRseor9wL6EvV2+TuQn63dMkPjZ/sp9XkghTEbV9KlPS1xUsZ3u7/IQO4wxtcFB4bgpQPRcR3QCvezPcQ=="],
 

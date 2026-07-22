@@ -1,0 +1,13 @@
+{
+  "name": "worker",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "bullmq": "^5.80.10"
+  }
+}
