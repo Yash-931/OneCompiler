@@ -27,6 +27,7 @@
     "packages/*"
   ],
   "dependencies": {
-    "bullmq": "^5.80.10"
+    "bullmq": "^5.80.10",
+    "fs": "^0.0.1-security"
   }
 }

@@ -1,9 +1,33 @@
 import { Job, Worker } from "bullmq";
+import { spawn } from "child_process";
+import fs from "fs";
 
 const worker = new Worker(
   "code-submissions",
   async (job: Job) => {
-    console.log(job.data);
+    const language = job.data.language;
+    const code = job.data.code;
+
+    //run users code and show it on the UI (prefer to run the code in a sandbox environment)
+
+    if (language === "js") {
+      const filePath = __dirname + "/codes/a.js";
+      fs.writeFileSync(filePath, code);
+      const response = spawn("node", [filePath]);
+      response.stdout.on("data", (data) => {
+        console.log(data.toString());
+      });
+    }
+
+    if (language === "py") {
+      const filePath = __dirname + "/codes/a.py";
+      fs.writeFileSync(filePath, code);
+      const response = spawn("python3", [filePath]);
+
+      response.stdout.on('data', (data) => {
+        console.log(data.toString())
+      })
+    }
   },
   {
     connection: {
