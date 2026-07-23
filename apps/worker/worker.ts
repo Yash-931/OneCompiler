@@ -42,6 +42,25 @@ const worker = new Worker(
         });
       });
     }
+
+    if (language === "cpp") {
+      const filePath = __dirname + "/codes/a.cpp";
+      fs.writeFileSync(filePath, code);
+      console.log(filePath);
+      spawn("g++", [filePath, "-o", "./codes/out"]);
+      await new Promise((r) => setTimeout(r, 2000));
+
+      const response = spawn("./codes/out");
+      response.stdout.on("data", async (data) => {
+        console.log(data.toString());
+        await prisma.submissions.update({
+          where: { id: id },
+          data: {
+            output: data.toString(),
+          },
+        });
+      });
+    }
   },
   {
     connection: {
