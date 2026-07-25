@@ -27,6 +27,11 @@ export function App() {
       console.log("Code output set to: " + response.data.submission.output)
     }
 
+    if(response.data.submission.status === "FAILURE"){
+      console.log("Logging the error on frontend")
+      setCodeOutput(`Error: ${response.data.submission.stderr}`)
+    }
+
   }
 
   async function submitCode() {

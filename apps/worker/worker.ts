@@ -2,7 +2,6 @@ import { Job, Worker } from "bullmq";
 import { spawn } from "child_process";
 import fs from "fs";
 import { prisma } from "@repo/db";
-import { exit, exitCode } from "process";
 
 const worker = new Worker(
   "code-submissions",
@@ -13,6 +12,7 @@ const worker = new Worker(
 
     //run users code and show it on the UI (prefer to run the code in a sandbox environment)
     let finalOutput = "";
+    let finalError = "";
 
     if (language === "js") {
       const filePath = __dirname + "/codes/a.js";
@@ -20,8 +20,13 @@ const worker = new Worker(
 
       const response = spawn("node", [filePath]);
       response.stdout.on("data", (data) => {
-        finalOutput += data.toString()
+        finalOutput += data.toString();
         console.log(data.toString());
+      });
+
+      response.stderr.on("data", (error) => {
+        finalError += error.toString();
+        console.log(error.toString());
       });
 
       await new Promise<void>((resolve) => {
@@ -31,6 +36,7 @@ const worker = new Worker(
             data: {
               output: finalOutput.toString(),
               status: exitCode === 0 ? "SUCCESS" : "FAILURE",
+              stderr: finalError,
             },
           });
           resolve();
@@ -44,8 +50,14 @@ const worker = new Worker(
       const response = spawn("python3", [filePath]);
 
       response.stdout.on("data", async (data) => {
-        finalOutput += data.toString()
+        finalOutput += data.toString();
         console.log(data.toString());
+      });
+
+      response.stderr.on("data", (error) => {
+        console.log("Logging error");
+        finalError += error.toString();
+        console.log(error.toString());
       });
 
       await new Promise<void>((resolve) => {
@@ -55,6 +67,7 @@ const worker = new Worker(
             data: {
               output: finalOutput.toString(),
               status: exitCode === 0 ? "SUCCESS" : "FAILURE",
+              stderr: finalError,
             },
           });
           resolve();
@@ -66,7 +79,13 @@ const worker = new Worker(
       const filePath = __dirname + "/codes/a.cpp";
       fs.writeFileSync(filePath, code);
       console.log(filePath);
+
       const responseCompiler = spawn("g++", [filePath, "-o", "./codes/out"]);
+
+      responseCompiler.stderr.on("data", (error) => {
+        finalError += error.toString()
+      })
+
       let exitCodeCompiler = null;
       await new Promise<void>((resolve) => {
         responseCompiler.on("exit", async (exitCode) => {
@@ -76,6 +95,7 @@ const worker = new Worker(
             where: { id: id },
             data: {
               status: exitCode === 0 ? "PENDING" : "FAILURE",
+              stderr: finalError
             },
           });
           resolve();
@@ -98,6 +118,7 @@ const worker = new Worker(
               data: {
                 output: finalOutput.toString(),
                 status: exitCode === 0 ? "SUCCESS" : "FAILURE",
+                stderr: finalError,
               },
             });
             resolve();

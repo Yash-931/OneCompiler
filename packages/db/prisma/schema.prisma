@@ -19,6 +19,7 @@ model Submissions {
   language   String
   output     String?
   status     submission_status    @default(PENDING)
+  stderr     String?
 }
 
 enum submission_status{
