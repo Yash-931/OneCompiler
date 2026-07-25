@@ -11,10 +11,12 @@ const worker = new Worker(
     const code = job.data.code;
 
     //run users code and show it on the UI (prefer to run the code in a sandbox environment)
+    let finalOutput = "";
 
     if (language === "js") {
       const filePath = __dirname + "/codes/a.js";
       fs.writeFileSync(filePath, code);
+
       const response = spawn("node", [filePath]);
       response.stdout.on("data", async (data) => {
         console.log(data.toString());
@@ -23,6 +25,18 @@ const worker = new Worker(
           data: {
             output: data.toString(),
           },
+        });
+
+        await new Promise<void>((resolve) => {
+          response.on("exit", async () => {
+            await prisma.submissions.update({
+              where: { id: id },
+              data: {
+                output: finalOutput.toString(),
+              },
+            });
+            resolve();
+          });
         });
       });
     }
@@ -40,6 +54,18 @@ const worker = new Worker(
             output: data.toString(),
           },
         });
+
+        await new Promise<void>((resolve) => {
+          response.on("exit", async () => {
+            await prisma.submissions.update({
+              where: { id: id },
+              data: {
+                output: finalOutput.toString(),
+              },
+            });
+            resolve();
+          });
+        });
       });
     }
 
@@ -52,12 +78,18 @@ const worker = new Worker(
 
       const response = spawn("./codes/out");
       response.stdout.on("data", async (data) => {
-        console.log(data.toString());
-        await prisma.submissions.update({
-          where: { id: id },
-          data: {
-            output: data.toString(),
-          },
+        finalOutput += data.toString();
+      });
+
+      await new Promise<void>((resolve) => {
+        response.on("exit", async () => {
+          await prisma.submissions.update({
+            where: { id: id },
+            data: {
+              output: finalOutput.toString(),
+            },
+          });
+          resolve();
         });
       });
     }

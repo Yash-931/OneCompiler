@@ -40,6 +40,7 @@ app.post("/submission", async (req, res) => {
   });
   return res.status(200).json({
     message: "Processing...",
+    submissionId: submission.id
   });
 });
 
