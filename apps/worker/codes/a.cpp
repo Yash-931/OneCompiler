@@ -1,4 +1,7 @@
 #include<iostream>
 using namespace std;
+
 int main(){
-	cout}
+    cout<<"hi";
+    return 0;
+}
