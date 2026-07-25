@@ -2,6 +2,7 @@ import { Job, Worker } from "bullmq";
 import { spawn } from "child_process";
 import fs from "fs";
 import { prisma } from "@repo/db";
+import { exitCode } from "process";
 
 const worker = new Worker(
   "code-submissions",
@@ -18,25 +19,20 @@ const worker = new Worker(
       fs.writeFileSync(filePath, code);
 
       const response = spawn("node", [filePath]);
-      response.stdout.on("data", async (data) => {
+      response.stdout.on("data", (data) => {
         console.log(data.toString());
-        await prisma.submissions.update({
-          where: { id: id },
-          data: {
-            output: data.toString(),
-          },
-        });
+      });
 
-        await new Promise<void>((resolve) => {
-          response.on("exit", async () => {
-            await prisma.submissions.update({
-              where: { id: id },
-              data: {
-                output: finalOutput.toString(),
-              },
-            });
-            resolve();
+      await new Promise<void>((resolve) => {
+        response.on("exit", async (exitCode) => {
+          await prisma.submissions.update({
+            where: { id: id },
+            data: {
+              output: finalOutput.toString(),
+              status: exitCode === 0 ? "SUCCESS" : "FAILURE",
+            },
           });
+          resolve();
         });
       });
     }
@@ -48,23 +44,18 @@ const worker = new Worker(
 
       response.stdout.on("data", async (data) => {
         console.log(data.toString());
-        await prisma.submissions.update({
-          where: { id: id },
-          data: {
-            output: data.toString(),
-          },
-        });
+      });
 
-        await new Promise<void>((resolve) => {
-          response.on("exit", async () => {
-            await prisma.submissions.update({
-              where: { id: id },
-              data: {
-                output: finalOutput.toString(),
-              },
-            });
-            resolve();
+      await new Promise<void>((resolve) => {
+        response.on("exit", async (exitCode) => {
+          await prisma.submissions.update({
+            where: { id: id },
+            data: {
+              output: finalOutput.toString(),
+              status: exitCode === 0 ? "SUCCESS" : "FAILURE"
+            },
           });
+          resolve();
         });
       });
     }
@@ -77,16 +68,18 @@ const worker = new Worker(
       await new Promise((r) => setTimeout(r, 2000));
 
       const response = spawn("./codes/out");
-      response.stdout.on("data", async (data) => {
+      response.stdout.on("data", (data) => {
         finalOutput += data.toString();
+        console.log(data.toString());
       });
 
       await new Promise<void>((resolve) => {
-        response.on("exit", async () => {
+        response.on("exit", async (exitCode) => {
           await prisma.submissions.update({
             where: { id: id },
             data: {
               output: finalOutput.toString(),
+              status: exitCode === 0 ? "SUCCESS" : "FAILURE"
             },
           });
           resolve();
