@@ -23,7 +23,7 @@ export function App() {
 
     if (response.data.submission.status === "SUCCESS") {
       console.log("Setting the code output...")
-      setCodeOutput(response.data.submission.output);
+      setCodeOutput(`Output: ${response.data.submission.output}`);
       console.log("Code output set to: " + response.data.submission.output)
     }
 
@@ -48,7 +48,7 @@ export function App() {
     <div>
       <div className="h-screen w-screen flex">
         {/* left part */}
-        <div className="flex-1 bg-red-300">
+        <div className="flex-1 bg-gray-800">
           <div className="flex justify-between">
             <div>
               <Button
@@ -83,12 +83,12 @@ export function App() {
           </div>
           <textarea
             ref={codeRef}
-            className="w-full h-full rows-500 border-2 border-black"
+            className="p-2 text-gray-200 w-full h-full rows-500 border-2 border-black"
           />
         </div>
 
         {/* right part */}
-        <div className="flex-1 bg-green-300">{codeOutput}</div>
+        <div className="flex-1 p-4 bg-gray-200">{codeOutput}</div>
       </div>
     </div>
   );
