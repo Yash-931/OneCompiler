@@ -2,7 +2,7 @@ import { Job, Worker } from "bullmq";
 import { spawn } from "child_process";
 import fs from "fs";
 import { prisma } from "@repo/db";
-import { exitCode } from "process";
+import { exit, exitCode } from "process";
 
 const worker = new Worker(
   "code-submissions",
@@ -20,6 +20,7 @@ const worker = new Worker(
 
       const response = spawn("node", [filePath]);
       response.stdout.on("data", (data) => {
+        finalOutput += data.toString()
         console.log(data.toString());
       });
 
@@ -43,6 +44,7 @@ const worker = new Worker(
       const response = spawn("python3", [filePath]);
 
       response.stdout.on("data", async (data) => {
+        finalOutput += data.toString()
         console.log(data.toString());
       });
 
@@ -52,7 +54,7 @@ const worker = new Worker(
             where: { id: id },
             data: {
               output: finalOutput.toString(),
-              status: exitCode === 0 ? "SUCCESS" : "FAILURE"
+              status: exitCode === 0 ? "SUCCESS" : "FAILURE",
             },
           });
           resolve();
@@ -64,27 +66,44 @@ const worker = new Worker(
       const filePath = __dirname + "/codes/a.cpp";
       fs.writeFileSync(filePath, code);
       console.log(filePath);
-      spawn("g++", [filePath, "-o", "./codes/out"]);
-      await new Promise((r) => setTimeout(r, 2000));
-
-      const response = spawn("./codes/out");
-      response.stdout.on("data", (data) => {
-        finalOutput += data.toString();
-        console.log(data.toString());
-      });
-
+      const responseCompiler = spawn("g++", [filePath, "-o", "./codes/out"]);
+      let exitCodeCompiler = null;
       await new Promise<void>((resolve) => {
-        response.on("exit", async (exitCode) => {
+        responseCompiler.on("exit", async (exitCode) => {
+          exitCodeCompiler = exitCode;
+          console.log("Compiler exit code: " + exitCode);
           await prisma.submissions.update({
             where: { id: id },
             data: {
-              output: finalOutput.toString(),
-              status: exitCode === 0 ? "SUCCESS" : "FAILURE"
+              status: exitCode === 0 ? "PENDING" : "FAILURE",
             },
           });
           resolve();
         });
       });
+
+      await new Promise((r) => setTimeout(r, 2000));
+
+      if (exitCodeCompiler === 0) {
+        const response = spawn("./codes/out");
+        response.stdout.on("data", (data) => {
+          finalOutput += data.toString();
+          console.log(data.toString());
+        });
+
+        await new Promise<void>((resolve) => {
+          response.on("exit", async (exitCode) => {
+            await prisma.submissions.update({
+              where: { id: id },
+              data: {
+                output: finalOutput.toString(),
+                status: exitCode === 0 ? "SUCCESS" : "FAILURE",
+              },
+            });
+            resolve();
+          });
+        });
+      }
     }
   },
   {
